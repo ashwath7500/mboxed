@@ -14,7 +14,7 @@ sudo mkdir -p /mnt/ldap/config
 sudo mkdir -p /mnt/cbox_shares_db/cbox_data
 sudo mkdir -p /mnt/cbox_shares_db/cbox_MySQL
 sudo chmod -rwx '/mnt'
-sudo minikube mount /mnt:/mnt
+gnome-terminal -- minikube mount /mnt:/mnt
 #Deployement of Services
 kubectl apply -f BOXED.yaml
 kubectl apply -f LDAP.yaml
