@@ -27,5 +27,5 @@ sudo kubectl apply -f CERNBOX.yaml
 
 #Execution of necessary commands
 LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | cut -d ' ' -f 1)
-sudo kubectl exec -n BOXED $LDAP_PODNAME -- bash /root/addusers.sh
+sudo kubectl exec -n boxed $LDAP_PODNAME -- bash /root/addusers.sh
  
