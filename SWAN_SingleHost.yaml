@@ -35,7 +35,7 @@ data:
 
 
 ### DEPLOYMENT ###
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: &name swan
@@ -43,7 +43,10 @@ metadata:
   labels:
     app: *name
 spec:
-  replicas: 1 
+  replicas: 1
+  selector:
+    matchLabels:
+        app: *name 
   template:
     metadata:
       labels:
@@ -54,7 +57,7 @@ spec:
       hostPID: true
       #hostIPC: true
       nodeSelector:
-        nodeApp: *name
+        nodeApp7: *name
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
 
