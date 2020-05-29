@@ -12,7 +12,7 @@ spec:
   subdomain: *name
   #hostNetwork: true
   nodeSelector:
-    nodeApp: *name
+    nodeApp9: *name
   containers:
   - name: eos-storage
     image: gitlab-registry.cern.ch/cernbox/boxedhub/eos-storage:v0.9
