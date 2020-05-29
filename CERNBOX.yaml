@@ -83,7 +83,7 @@ data:
 ### PODS ###
 ---
 # MySQL -- Deployment
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: &name cernboxmysql
@@ -92,6 +92,9 @@ metadata:
     app: *name
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+        app: *name
   template:
     metadata:
       labels:
@@ -102,7 +105,7 @@ spec:
       restartPolicy: Always
       nodeSelector:
         # Run together with the CERNBox backend (ownCloud) pod
-        nodeApp: cernbox
+        nodeApp5: cernbox
       containers:
       - name: *name
         image: gitlab-registry.cern.ch/cernbox/boxedhub/cernboxmysql:v1.0
@@ -164,7 +167,7 @@ spec:
 
 ---
 # CERNBox Backend (ownCloud) -- Deployment
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: &name cernbox
@@ -173,6 +176,9 @@ metadata:
     app: *name
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+        app: *name
   template:
     metadata:
       labels:
@@ -182,7 +188,7 @@ spec:
       terminationGracePeriodSeconds: 60
       restartPolicy: Always
       nodeSelector:
-        nodeApp: *name
+        nodeApp4: *name
       hostname: *name
       subdomain: *name
       containers:
@@ -353,7 +359,7 @@ spec:
 
 ---
 # CERNBox Gateway (nginx proxy) -- Deployment
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: &name cernboxgateway
@@ -362,6 +368,9 @@ metadata:
     app: *name
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+        app: *name
   template:
     metadata:
       labels:
@@ -371,7 +380,7 @@ spec:
       terminationGracePeriodSeconds: 60
       restartPolicy: Always
       nodeSelector:
-        nodeApp: *name
+        nodeApp6: *name
       hostname: *name
       subdomain: *name
       hostNetwork: true
@@ -568,4 +577,3 @@ spec:
 #    targetPort: 443
 #    nodePort: 30443
 #  type: NodePort
-
