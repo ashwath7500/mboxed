@@ -23,7 +23,18 @@ sudo chmod -rwx '/mnt'
 #Deployement of Services
 sudo kubectl apply -f BOXED.yaml
 sudo kubectl apply -f LDAP.yaml
+run=$'Running'
+LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | grep -o 'Running')
+while  [ "$LDAP_PODNAME" != "$run" ] 
+do
+LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | grep -o 'Running')
+done
 sudo kubectl apply -f eos-storage-mgm.yaml
+Eos_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep eos-mgm | grep -o 'Running')
+while [ "$Eos_PODNAME" != "$run" ]
+do
+Eos_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep eos-mgm | grep -o 'Running')
+done
 #bash eos-storage-fst.sh 1 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
 #bash eos-storage-fst.sh 2 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
 sudo kubectl apply -f eos-storage-fst1.yaml
