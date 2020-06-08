@@ -239,7 +239,9 @@ spec:
         - name: DEPLOYMENT_TYPE
           value: "kubernetes"
         - name: CERNBOXGATEWAY_HOSTNAME         # Hostname of the proxy cernboxgateway
-          value: "up2kube-cernbox.cern.ch"      # It has to match the name of the machine where the proxy is deployed by kubernetes!
+          valueFrom:                        # at the DNS (e.g., no aliases are defined)
+            fieldRef:                       # Otherwise, please specify manually the hostname below.
+              fieldPath: spec.nodeName      # It has to match the name of the machine where the proxy is deployed by kubernetes!
         - name: HTTPS_PORT
           value: "443"
         ### LDAP parameters
@@ -255,7 +257,7 @@ spec:
           value: "readuser"
         # The following LDAP vars are required only when using User Backends 
         # that need the ability to store new entries in the LDAP server
-        - name: LDAP_ADMIN_BIND_DN
+        - name: LDAP_ADMIN_BIND_DNhost
           value: "cn=admin,dc=example,dc=org"
         - name: LDAP_ADMIN_BIND_PASSWORD
           value: "admin"
@@ -430,18 +432,18 @@ spec:
           value: "CERNBOXGATEWAY"
         - name: DEPLOYMENT_TYPE
           value: "kubernetes"
-        #- name: HOSTNAME                    # Use this configuration only if the linux hostname matches the chosen domain name
-        #  valueFrom:                        # at the DNS (e.g., no aliases are defined)
-        #    fieldRef:                       # Otherwise, please specify manually the hostname below.
-        #      fieldPath: spec.nodeName
-        - name: HOSTNAME                     # Assume the gateway is exposed via hostNetwork on the node where it runs
-          value: "up2kube-cernbox.cern.ch"   # URL to reach the landing page will be: https://<HOSTNAME>
+        - name: HOSTNAME                    # Use this configuration only if the linux hostname matches the chosen domain name
+          valueFrom:                        # at the DNS (e.g., no aliases are defined)
+            fieldRef:                       # Otherwise, please specify manually the hostname below.
+              fieldPath: spec.nodeName
+        #- name: HOSTNAME                     # Assume the gateway is exposed via hostNetwork on the node where it runs
+        #  value: HOSTNAME   # URL to reach the landing page will be: https://<HOSTNAME>
         - name: HTTP_PORT
           value: "80"
         - name: HTTPS_PORT
           value: "443"
         #- name: CERNBOX_SUBDOMAIN                   # If the DNS config allows, configure a subdomain to directly access CERNBox
-        #  value: "cernbox.up2kube-cernbox.cern.ch"  # The Web UI will be reachable at https://<CERNBOX_SUBDOMAIN> and at https://<HOSTNAME>/cernbox
+        #  value: HOSTNAME # The Web UI will be reachable at https://<CERNBOX_SUBDOMAIN> and at https://<HOSTNAME>/cernbox
         - name: ESCAPE_LANDING_PAGE          # Force a redirect to https://<HOSTNAME>/cernbox
           value: "false"
         ### LDAP parameters
@@ -577,4 +579,3 @@ spec:
 #    targetPort: 443
 #    nodePort: 30443
 #  type: NodePort
-
