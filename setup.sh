@@ -40,6 +40,7 @@ done
 sudo kubectl apply -f eos-storage-fst1.yaml
 sudo kubectl apply -f eos-storage-fst2.yaml
 sudo kubectl apply -f eos-storage-fst3.yaml
+sudo kubectl apply -f CERNBOX.yaml
 
 #some uses
 LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | cut -d ' ' -f 1)
