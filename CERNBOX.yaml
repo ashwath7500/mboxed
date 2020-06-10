@@ -469,9 +469,11 @@ spec:
         - name: WEBDAV_CLIENT_CERT_PORT
           value: "4443"
         - name: SWAN_BACKEND
-          value: "up2kube-swan.cern.ch"
+          valueFrom:                     # at the DNS (e.g., no aliases are defined)
+            fieldRef:                    # Otherwise, please specify manually the hostname below. 
+              fieldPath: spec.nodeName
         - name: SWAN_BACKEND_PORT
-          value: "443"
+          value: "8443"
         ### EOS parameters
         - name: EOS_PREFIX
           value: "/eos/docker/user/"
