@@ -16,9 +16,10 @@ sudo mkdir -p /mnt/ldap/config
 sudo mkdir -p /mnt/cbox_shares_db/cbox_data
 sudo mkdir -p /mnt/cbox_shares_db/cbox_MySQL
 sudo mkdir -p /mnt/eos_namespace
-sudo mkdir -p /mnt/fst_userdata
+sudo mkdir -p /mnt/fst_userdatade
 sudo mkdir -p /mnt/fst2_userdata
 sudo mkdir -p /mnt/fst3_userdata
+sudo mkdir -p /mnt/jupyterhub_data
 sudo chmod -rwx '/mnt'
 #Deployement of Services
 sudo kubectl apply -f BOXED.yaml
@@ -41,6 +42,8 @@ sudo kubectl apply -f eos-storage-fst1.yaml
 sudo kubectl apply -f eos-storage-fst2.yaml
 sudo kubectl apply -f eos-storage-fst3.yaml
 sudo kubectl apply -f CERNBOX.yaml
+sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=boxed:default
+sudo kubectl apply -f SWAN.yaml
 
 #some uses
 LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | cut -d ' ' -f 1)
