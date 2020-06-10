@@ -124,12 +124,12 @@ spec:
         ports:
         - name: http
           protocol: TCP
-          hostPort: &HTTP_PORT 8080
-          containerPort: 80
+          hostPort: &HTTP_PORT 10080
+          containerPort: 10080
         - name: https
           protocol: TCP
-          hostPort: &HTTPS_PORT 8443
-          containerPort: 443
+          hostPort: &HTTPS_PORT 10443
+          containerPort: 10443
         volumeMounts:
         - name: &vm_swan-certs swan-certs
           mountPath: /etc/boxed/certs
@@ -173,9 +173,9 @@ spec:
         #- name: HOSTNAME                 # Assume JupyterHub is exposed via hostNetwork on the node where it runs
         #  value: "up2kube-swan.cern.ch"  # URL to reach SWAN will be: https://<HOSTNAME>
         - name: HTTP_PORT
-          value: "8080"
+          value: "10080"
         - name: HTTPS_PORT
-          value: "8443"
+          value: "10443"
         ### LDAP parameters
         - name: LDAP_URI
           value: "ldap://ldap.boxed.svc.cluster.local"
