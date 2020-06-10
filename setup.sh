@@ -16,7 +16,7 @@ sudo mkdir -p /mnt/ldap/config
 sudo mkdir -p /mnt/cbox_shares_db/cbox_data
 sudo mkdir -p /mnt/cbox_shares_db/cbox_MySQL
 sudo mkdir -p /mnt/eos_namespace
-sudo mkdir -p /mnt/fst_userdatade
+sudo mkdir -p /mnt/fst_userdata
 sudo mkdir -p /mnt/fst2_userdata
 sudo mkdir -p /mnt/fst3_userdata
 sudo mkdir -p /mnt/jupyterhub_data
