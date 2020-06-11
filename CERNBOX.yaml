@@ -473,7 +473,7 @@ spec:
             fieldRef:                    # Otherwise, please specify manually the hostname below. 
               fieldPath: spec.nodeName
         - name: SWAN_BACKEND_PORT
-          value: "8443"
+          value: "10443"
         ### EOS parameters
         - name: EOS_PREFIX
           value: "/eos/docker/user/"

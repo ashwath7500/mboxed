@@ -37,33 +37,14 @@ minikube version
 # Install kubectl
 #   Docs at https://kubernetes.io/docs/tasks/tools/install-kubectl/
 echo "Installing kubectl..."
-mkdir -p /usr/local/bin/
-curl -L https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
-chmod +x /usr/local/bin/kubectl
-kubectl version
+install_kubernetes
 
 # Install docker
 #   Docs at https://docs.docker.com/engine/install/ubuntu/
 # TODO: We should consider the ubuntu version
 # TODO: Make docker version configurable
 echo "Installing docker..."
-apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg-agent \
-    software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-apt-key fingerprint 0EBFCD88
-add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-apt-get update
-apt-get install -y \
-  docker-ce \
-  docker-ce-cli \
-  containerd.io
+install_docker
 
 # Start docker
 echo "Starting docker daemon..."

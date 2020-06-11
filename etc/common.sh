@@ -8,8 +8,8 @@ SUPPORTED_NODE_TYPES=(master worker)
 
 BASIC_SOFTWARE="wget git sudo "
 
-DOCKER_VERSION="-17.03.2.ce"
-KUBE_VERSION="-1.9.5-0"
+DOCKER_VERSION="5:18.09.6~3-0~ubuntu-bionic"
+KUBE_VERSION="-1.15.0-00"
 
 OS_RELEASE="/etc/os-release"
 
@@ -197,7 +197,14 @@ install_docker()
   elif [[ "$HOST_OS" == "ubuntu" ]]; then
     echo ""
     # TODO: To be implemented
-
+    sudo apt update
+    sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt update
+    sudo apt install docker-ce=${DOCKER_VERSION}
+    systemctl enable docker && systemctl start docker
+    systemctl status docker
   else
     echo "Unknown OS. Cannot continue."
     exit 1
@@ -233,13 +240,12 @@ EOF
     systemctl status kubelet
 
   elif [[ "$HOST_OS" ==  "ubuntu" ]]; then
-    apt-get update && apt-get install -y apt-transport-https
-    wget -q https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-    cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
-deb http://apt.kubernetes.io/ kubernetes-xenial main
-EOF
-    apt-get update
-    apt-get install -y kubelet kubeadm
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && \
+  echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list && \
+  sudo apt-get update -q && \
+  sudo apt-get install -qy kubelet=${KUBE_VERSION} kubectl=${KUBE_VERSION} kubeadm=${KUBE_VERSION}
+    systemctl enable kubelet && systemctl start kubelet
+    systemctl status kubelet
 
   else
     echo "Unknown OS. Cannot continue."
