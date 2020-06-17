@@ -14,6 +14,8 @@ source etc/common.sh
 # Check to be root
 need_root
 
+#Detect the os
+detect_os
 
 # Install basic software
 echo "Installing basic software..."
@@ -28,11 +30,11 @@ apt-get install -y \
 
 # Install minikube
 #   Docs at https://kubernetes.io/docs/tasks/tools/install-minikube/
-echo "Installing minikube..."
-mkdir -p /usr/local/bin/
-curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o /usr/local/bin/minikube
-chmod +x /usr/local/bin/minikube
-minikube version
+#echo "Installing minikube..."
+#mkdir -p /usr/local/bin/
+#curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o /usr/local/bin/minikube
+#chmod +x /usr/local/bin/minikube
+#minikube version
 
 # Install kubectl
 #   Docs at https://kubernetes.io/docs/tasks/tools/install-kubectl/
@@ -44,6 +46,7 @@ install_kubernetes
 # TODO: We should consider the ubuntu version
 # TODO: Make docker version configurable
 echo "Installing docker..."
+check_docker_version
 install_docker
 
 # Start docker

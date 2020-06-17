@@ -7,9 +7,9 @@ SUPPORTED_HOST_OS=(centos7)
 SUPPORTED_NODE_TYPES=(master worker)
 
 BASIC_SOFTWARE="wget git sudo "
-
+HOST_OS="ubuntu"
 DOCKER_VERSION="5:18.09.6~3-0~ubuntu-bionic"
-KUBE_VERSION="-1.15.0-00"
+KUBE_VERSION="1.15.0-00"
 
 OS_RELEASE="/etc/os-release"
 
@@ -127,10 +127,8 @@ configure_iptables ()
         TCP_PORTS_MASTER="2379 2380 6443 10250 10251 10252 10255 "
         TCP_PORTS_WORKER=" 10250 10255 "
         IFACE="eth0"
-
         echo ""
         echo "Configuring iptables..."
-
         # Different ports to be opened according to the node type
         if [[ "$1" == "master" ]]; then
                 TCP_PORTS=$TCP_PORTS_MASTER
@@ -140,13 +138,11 @@ configure_iptables ()
                 echo "WARNING: unknown node type. iptables left unchanged."
                 TCP_PORTS=""
         fi
-
         # Add rules to iptables
         for port in $TCP_PORTS
         do
                 iptables -I INPUT -i $IFACE -p tcp --dport $port -j ACCEPT
         done
-
         # Properly set bridge-nf-call when SELinux is enforcing and firewalld is running
         sysctl net.bridge.bridge-nf-call-iptables=1
         sysctl net.bridge.bridge-nf-call-ip6tables=1
@@ -172,7 +168,24 @@ install_basics()
   fi
 }
 
-
+#Check Docker version
+check_docker_version()
+{
+  ver=$'version'
+  check=$(docker -v| grep -o 'version')
+  if [ "$check" == "$ver" ]; then
+    check1="$(docker -v| grep -o "$DOCKER_VERSION")"
+    if [ "$check1" == "$DOCKER_VERSION" ]; then
+      echo "The required version is already installed."
+    else
+      read -p "You have a different version of docker installed which might not be able to run ScienceBox. Are you willing to change your version to $DOCKER_VERSION ?(Y/N)" res
+      if [[ "$res" == "NO" || "$res" == "No"|| "$res" == "no" || "$res" == "N" || "$res" == "n" ]]; then
+        exit 1
+      fi
+    fi
+  fi
+      
+}
 
 # Install Docker
 install_docker()
@@ -211,7 +224,24 @@ install_docker()
   fi
 }
 
-
+#Check Kubernetes version
+check_kube_version()
+{
+  ver=$'version'
+  check=$(kubectl version | grep -o 'Version')
+  if [ "$check" == "$ver" ]; then
+    check1="$(docker -v| grep -o "$DOCKER_VERSION")"
+    if [ "$check1" == "$DOCKER_VERSION" ]; then
+      echo "The required version is already installed."
+    else
+      read -p "You have a different version of docker installed which might not be able to run ScienceBox. Are you willing to change your version to $DOCKER_VERSION ?(Y/N)" res
+      if [[ "$res" == "NO" || "$res" == "No"|| "$res" == "no" || "$res" == "N" || "$res" == "n" ]]; then
+        exit 1
+      fi
+    fi
+  fi
+      
+}
 
 # Install Kubernetes
 install_kubernetes ()
@@ -240,13 +270,13 @@ EOF
     systemctl status kubelet
 
   elif [[ "$HOST_OS" ==  "ubuntu" ]]; then
-    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && \
-  echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list && \
-  sudo apt-get update -q && \
-  sudo apt-get install -qy kubelet=${KUBE_VERSION} kubectl=${KUBE_VERSION} kubeadm=${KUBE_VERSION}
-    systemctl enable kubelet && systemctl start kubelet
-    systemctl status kubelet
-
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    sudo apt-get update -q
+    sudo apt-get install -qy kubectl=${KUBE_VERSION}
+    #systemctl enable kubelet && systemctl start kubelet
+    #systemctl status kubelet
+    kubectl version
   else
     echo "Unknown OS. Cannot continue."
     exit 1
@@ -303,5 +333,6 @@ start_kube_masternode ()
     service kubelet restart
   fi
 }
+
 
 
