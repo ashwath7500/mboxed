@@ -1,5 +1,5 @@
 #Assigning labels to minikube node
-sudo minikube start --driver=none
+sudo minikube start --driver=none --kubernetes-version=1.15.0
 NODE_NAME=$(sudo kubectl get nodes | grep master | cut -d ' ' -f 1)
 sudo kubectl label node $NODE_NAME nodeApp1=ldap
 sudo kubectl label node $NODE_NAME nodeApp2=eos-mgm
@@ -36,8 +36,9 @@ while [ "$Eos_PODNAME" != "$run" ]
 do
 Eos_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep eos-mgm | grep -o 'Running')
 done
-#bash eos-storage-fst.sh 1 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
-#bash eos-storage-fst.sh 2 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
+bash eos-storage-fst.sh 1 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default nodeApp3 eos-fst1
+bash eos-storage-fst.sh 2 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default nodeApp3 eos-fst1
+bash eos-storage-fst.sh 3 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default nodeApp3 eos-fst1
 sudo kubectl apply -f eos-storage-fst1.yaml
 sudo kubectl apply -f eos-storage-fst2.yaml
 sudo kubectl apply -f eos-storage-fst3.yaml

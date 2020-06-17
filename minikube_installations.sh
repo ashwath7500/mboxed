@@ -31,14 +31,11 @@ apt-get install -y \
 # Install minikube
 #   Docs at https://kubernetes.io/docs/tasks/tools/install-minikube/
 #echo "Installing minikube..."
-#mkdir -p /usr/local/bin/
-#curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o /usr/local/bin/minikube
-#chmod +x /usr/local/bin/minikube
-#minikube version
-
+install_minikube
 # Install kubectl
-#   Docs at https://kubernetes.io/docs/tasks/tools/install-kubectl/
+#   Docs at https://kubernetes.io/dcs/tasks/tools/install-kubectl/
 echo "Installing kubectl..."
+check_kube_version
 install_kubernetes
 
 # Install docker

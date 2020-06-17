@@ -1,4 +1,4 @@
-#!/bin/bash
+	#!/bin/bash
 # Shared variables and functions
 
 
@@ -8,7 +8,7 @@ SUPPORTED_NODE_TYPES=(master worker)
 
 BASIC_SOFTWARE="wget git sudo "
 HOST_OS="ubuntu"
-DOCKER_VERSION="5:18.09.6~3-0~ubuntu-bionic"
+DOCKER_VERSION="18.06.0~ce~3-0~ubuntu"
 KUBE_VERSION="1.15.0-00"
 
 OS_RELEASE="/etc/os-release"
@@ -227,20 +227,29 @@ install_docker()
 #Check Kubernetes version
 check_kube_version()
 {
-  ver=$'version'
-  check=$(kubectl version | grep -o 'Version')
+  ver=$'Version'
+  check=$(sudo kubectl version | grep -o 'Version')
   if [ "$check" == "$ver" ]; then
-    check1="$(docker -v| grep -o "$DOCKER_VERSION")"
-    if [ "$check1" == "$DOCKER_VERSION" ]; then
+    check1="$(sudo kubectl version | grep -o "$KUBE_VERSION")"
+    if [ "$check1" == "$KUBE_VERSION" ]; then
       echo "The required version is already installed."
     else
-      read -p "You have a different version of docker installed which might not be able to run ScienceBox. Are you willing to change your version to $DOCKER_VERSION ?(Y/N)" res
+      read -p "You have a different version of kubectl installed which might not be able to run ScienceBox. Are you willing to change your version to $KUBE_VERSION ?(Y/N)" res
       if [[ "$res" == "NO" || "$res" == "No"|| "$res" == "no" || "$res" == "N" || "$res" == "n" ]]; then
         exit 1
       fi
     fi
   fi
       
+}
+
+#Install MiniKube
+install_minikube()
+{
+  mkdir -p /usr/local/bin/  
+  curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o /usr/local/bin/minikube
+  chmod +x /usr/local/bin/minikube
+  minikube version
 }
 
 # Install Kubernetes
