@@ -4,6 +4,9 @@ source etc/common.sh
 need_root
 #Starting minikube
 sudo minikube start --driver=none --kubernetes-version=1.15.0
+#Prepull images
+echo "Pre-Pulling images"
+pull_images
 #Assigning labels to minikube node
 label_nodes
 #Creation of persistant volumes

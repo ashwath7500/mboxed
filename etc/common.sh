@@ -408,4 +408,17 @@ add_users()
   sudo kubectl exec -n boxed $LDAP_PODNAME -- bash /root/addusers.sh
 }
 
+#Pulling the dockcer images
+pull_images()
+{
+docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cernboxmysql:v1.0 -q
+docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cernbox:v1.4 -q
+docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cernboxgateway:v1.1 -q
+docker pull gitlab-registry.cern.ch/cernbox/boxedhub/eos-storage:v0.9 -q
+docker pull gitlab-registry.cern.ch/cernbox/boxedhub/eos-storage:v0.9 -q
+docker pull gitlab-registry.cern.ch/cernbox/boxedhub/ldap:v0.2 -q
+docker pull gitlab-registry.cern.ch/swan/docker-images/jupyterhub:v1.9 -q
+docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cvmfssquid:v0 -q
+docker pull gitlab-registry.cern.ch/cernbox/boxedhub/eos-fuse:v0.8 -q
+}
 
