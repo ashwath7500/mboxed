@@ -23,7 +23,7 @@ install_basics
 
 # Install dependencies
 echo "Installing dependencies..."
-if [[ "$HOST_OS" == "centos7" ]]; then
+if [[ "$HOST_OS" == "ubuntu" ]]; then
 apt-get install -y \
   conntrack
 fi

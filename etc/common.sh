@@ -157,7 +157,7 @@ install_basics()
   echo ""
   echo "Installing the basics..."
 
-  if [[ "$HOST_OS" == "centos7" ]]; then
+  if [[ "$HOST_OS" == "centos" ]]; then
     yum install -y $BASIC_SOFTWARE
   elif [[ "$HOST_OS" == "ubuntu" ]]; then
     apt-get install -y $BASIC_SOFTWARE
@@ -192,7 +192,7 @@ install_docker()
   echo ""
   echo "Installing Docker..." 
 
-  if [[ "$HOST_OS" == "centos7" ]]; then
+  if [[ "$HOST_OS" == "centos" ]]; then
     mkdir -p /var/lib/docker
     yum install -y yum-utils \
       device-mapper-persistent-data \
@@ -257,7 +257,7 @@ install_kubernetes ()
   echo ""
   echo "Installing kubernetes..."
 
-  if [[ "$HOST_OS" == "centos7" ]]; then
+  if [[ "$HOST_OS" == "centos" ]]; then
     cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
