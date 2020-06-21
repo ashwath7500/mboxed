@@ -6,8 +6,7 @@
 SUPPORTED_HOST_OS=(centos7)
 SUPPORTED_NODE_TYPES=(master worker)
 
-BASIC_SOFTWARE="wget git sudo "
-HOST_OS="ubuntu"
+BASIC_SOFTWARE="curl wget git sudo "
 DOCKER_VERSION="18.06.0~ce~3-0~ubuntu"
 KUBE_VERSION="1.15.0-00"
 
@@ -47,7 +46,7 @@ detect_os ()
 {
   # TODO: not used
   source $OS_RELEASE
-  echo $ID$VERSION_ID
+  HOST_OS=$ID
 }
 
 

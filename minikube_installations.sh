@@ -19,14 +19,14 @@ detect_os
 
 # Install basic software
 echo "Installing basic software..."
-apt-get install -y \
-  curl \
-  git
+install_basics
 
 # Install dependencies
 echo "Installing dependencies..."
+if [[ "$HOST_OS" == "centos7" ]]; then
 apt-get install -y \
   conntrack
+fi
 
 # Install minikube
 #   Docs at https://kubernetes.io/docs/tasks/tools/install-minikube/
