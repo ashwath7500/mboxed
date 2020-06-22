@@ -171,6 +171,7 @@ install_basics()
 check_docker_version()
 {
   ver=$'version'
+  if [ -x "$(command -v docker)" ]; then
   check=$(docker -v| grep -o 'version')
   if [ "$check" == "$ver" ]; then
     check1="$(docker -v| grep -o "$DOCKER_VERSION")"
@@ -183,7 +184,7 @@ check_docker_version()
       fi
     fi
   fi
-      
+  fi      
 }
 
 # Install Docker
@@ -210,11 +211,11 @@ install_docker()
     echo ""
     # TODO: To be implemented
     sudo apt update
-    sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+    sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     sudo apt update
-    sudo apt install docker-ce=${DOCKER_VERSION}
+    sudo apt install docker-ce=${DOCKER_VERSION} -y
     systemctl enable docker && systemctl start docker
     systemctl status docker
   else
@@ -227,6 +228,7 @@ install_docker()
 check_kube_version()
 {
   ver=$'Version'
+  if [ -x "$(command -v kubectl)" ]; then
   check=$(sudo kubectl version | grep -o 'Version')
   if [ "$check" == "$ver" ]; then
     check1="$(sudo kubectl version | grep -o "$KUBE_VERSION")"
@@ -239,7 +241,7 @@ check_kube_version()
       fi
     fi
   fi
-      
+  fi
 }
 
 #Install MiniKube
