@@ -7,7 +7,7 @@ SUPPORTED_HOST_OS=(centos7)
 SUPPORTED_NODE_TYPES=(master worker)
 
 BASIC_SOFTWARE="curl wget git sudo "
-DOCKER_VERSION="18.06.0~ce~3-0~ubuntu"
+DOCKER_VERSION="5:18.09.6~3-0~ubuntu-bionic"
 KUBE_VERSION="1.15.0-00"
 
 OS_RELEASE="/etc/os-release"

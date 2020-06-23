@@ -18,4 +18,4 @@ echo "Deploying Services..."
 deploy_sciencebox
 #adding users
 echo "Adding dummy users..."
-add_users 
+add_users
