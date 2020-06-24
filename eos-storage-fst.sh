@@ -2,10 +2,10 @@
 
 set -o errexit	# Bail out on errors
 
-if [ "$#" -ne 7 ]; then
+if [ "$#" -ne 9 ]; then
         echo "ERROR: Illegal number of parameters."
         echo "Syntax:  eos-storage-fst.sh <fst_number> <eos_mgm_alias> <eos_mq_alias> <geotag> <scheduling_group>"
-        echo "Example: eos-storage-fst.sh 1 eos-mgm.eos-mgm.boxed.svc.cluster.local eos-mq.eos-mq.boxed.svc.cluster.local docker default nodeApp3 eos-fst1"
+        echo "Example: eos-storage-fst.sh 1 eos-mgm.eos-mgm.boxed.svc.cluster.local eos-mq.eos-mq.boxed.svc.cluster.local docker default nodeApp3 eos-fst1 fst1_userdata fst1_logs"
         exit 1
 fi
 
@@ -20,6 +20,8 @@ GEOTAG=$4
 SCHEDULING_GROUP=$5
 FST_NODE_APP=$6
 FST_NODE_NAME=$7
+FST_USER_DATA=$8
+FST_LOGS=$9
 
 FNAME="eos-storage-fst${FST_NUMBER}.yaml"
 cp eos-storage-fst.template.yaml $FNAME
@@ -32,4 +34,6 @@ sed -i "s/%%%FST_GEOTAG%%%/${GEOTAG}/" $FNAME
 sed -i "s/%%%FST_SCHEDULING_GROUP%%%/${SCHEDULING_GROUP}/" $FNAME
 sed -i "s/%%%FST_NODE_APP%%%/${FST_NODE_APP}/" $FNAME
 sed -i "s/%%%FST_NODE_NAME%%%/${FST_NODE_NAME}/" $FNAME
+sed -i "s/%%%FST_USER_DATA%%%/${FST_USER_DATA}/" $FNAME
+sed -i "s/%%%FST_LOGS%%%/${FST_LOGS}/" $FNAME
 

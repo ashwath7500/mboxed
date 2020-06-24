@@ -367,7 +367,7 @@ create_volumes()
   sudo mkdir -p /mnt/cbox_shares_db/cbox_data
   sudo mkdir -p /mnt/cbox_shares_db/cbox_MySQL
   sudo mkdir -p /mnt/eos_namespace
-  sudo mkdir -p /mnt/fst_userdata
+  sudo mkdir -p /mnt/fst1_userdata
   sudo mkdir -p /mnt/fst2_userdata
   sudo mkdir -p /mnt/fst3_userdata
   sudo mkdir -p /mnt/jupyterhub_data
@@ -391,9 +391,9 @@ deploy_sciencebox()
   do
   Eos_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep eos-mgm | grep -o 'Running')
   done
-  bash eos-storage-fst.sh 1 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default nodeApp3 eos-fst1
-  bash eos-storage-fst.sh 2 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default nodeApp3 eos-fst1
-  bash eos-storage-fst.sh 3 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default nodeApp3 eos-fst1
+  bash eos-storage-fst.sh 1 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default nodeApp3 eos-fst1 fst1_userdata fst1_logs
+  bash eos-storage-fst.sh 2 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default nodeApp3 eos-fst1 fst2_userdata fst2_logs
+  bash eos-storage-fst.sh 3 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default nodeApp3 eos-fst1 fst3_userdata fst3_logs
   sudo kubectl apply -f eos-storage-fst1.yaml
   sudo kubectl apply -f eos-storage-fst2.yaml
   sudo kubectl apply -f eos-storage-fst3.yaml
