@@ -1,36 +1,46 @@
-#Assigning labels to minikube node
-sudo minikube start --driver=none
-NODE_NAME=$(sudo kubectl get nodes | grep master | cut -d ' ' -f 1)
-sudo kubectl label node $NODE_NAME nodeApp1=ldap
-sudo kubectl label node $NODE_NAME nodeApp2=eos-mgm
-sudo kubectl label node $NODE_NAME nodeApp3=eos-fst1
-sudo kubectl label node $NODE_NAME nodeApp4=cernbox
-sudo kubectl label node $NODE_NAME nodeApp5=cernbox
-sudo kubectl label node $NODE_NAME nodeApp6=cernboxgateway
-sudo kubectl label node $NODE_NAME nodeApp7=swan 
-sudo kubectl label node $NODE_NAME nodeApp8=swan-users
-sudo kubectl label node $NODE_NAME nodeApp9=eos-mq
+# Import variables and functions
+source etc/functions.sh
+# Check to be root
+need_root
+#Pulling yamls
+git clone https://github.com/cernbox/kuboxed.git  #add these in installations.
+chmod -R 777 ./kuboxed
+#Modifying yamls
+sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/CERNBOX.yaml
+sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/eos-storage-fst.template.yaml
+sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/eos-storage-mgm.yaml
+sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/LDAP.yaml
+sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/SWAN.yaml
+sed -i 's/swan-users/minikube/g' ./kuboxed/SWAN.yaml
+NODE_NAME=$(hostname) #need to change for other drivers
+sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
+sed -i 's@up2kube-swan.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
+sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/SWAN.yaml
+sed -i 's@up2kube-swan.cern.ch@'"$NODE_NAME"'@' ./kuboxed/SWAN.yaml
+Line_num=$(grep "SWAN_BACKEND_PORT"  ./kuboxed/CERNBOX.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
+Line_num=`expr $Line_num + 1`
+sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10443"\2/' ./kuboxed/CERNBOX.yaml
+sed -i 's/^\( *hostPort: &HTTP_PORT  *\)[^ ]*\(.*\)*$/\110080\2/' ./kuboxed/SWAN.yaml
+sed -i 's/^\( *hostPort: &HTTPS_PORT  *\)[^ ]*\(.*\)*$/\110443\2/' ./kuboxed/SWAN.yaml
+Line_num=$(grep "name: HTTP_PORT"  ./kuboxed/SWAN.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
+Line_num=`expr $Line_num + 1`
+sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10080"\2/' ./kuboxed/SWAN.yaml
+Line_num=$(grep "name: HTTPS_PORT"  ./kuboxed/SWAN.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
+Line_num=`expr $Line_num + 1`
+sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10443"\2/' ./kuboxed/SWAN.yaml
+sed -i 's:^cp.*$:cp ./kuboxed/eos-storage-fst.template.yaml $FNAME:g' ./kuboxed/eos-storage-fst.sh
+#Pulling images
+#TODO
+#Starting minikube
+sudo minikube start --driver=none --kubernetes-version=1.15.0
+#Assigning label to minikube node
+label_nodes
 #Creation of persistant volumes
-sudo mkdir -p /mnt/ldap/userdb
-sudo mkdir -p /mnt/ldap/config
-sudo mkdir -p /mnt/cbox_shares_db/cbox_data
-sudo mkdir -p /mnt/cbox_shares_db/cbox_MySQL
-sudo mkdir -p /mnt/eos_namespace
-sudo mkdir -p /mnt/fst_userdata
-sudo mkdir -p /mnt/fst2_userdata
-sudo mkdir -p /mnt/fst3_userdata
-sudo chmod -rwx '/mnt'
+echo "Creating persistant volumes..."
+create_volumes
 #Deployement of Services
-sudo kubectl apply -f BOXED.yaml
-sudo kubectl apply -f LDAP.yaml
-sudo kubectl apply -f eos-storage-mgm.yaml
-#bash eos-storage-fst.sh 1 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
-#bash eos-storage-fst.sh 2 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
-sudo kubectl apply -f eos-storage-fst1.yaml
-sudo kubectl apply -f eos-storage-fst2.yaml
-sudo kubectl apply -f eos-storage-fst3.yaml
-
-#some uses
-LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | cut -d ' ' -f 1)
-sudo kubectl exec -n boxed $LDAP_PODNAME -- bash /root/addusers.sh
- 
+echo "Deploying Services..."
+deploy_sciencebox
+#adding users
+echo "Adding dummy users..."
+add_users
