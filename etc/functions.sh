@@ -7,8 +7,8 @@ SUPPORTED_HOST_OS=(centos7)
 SUPPORTED_NODE_TYPES=(master worker)
 
 BASIC_SOFTWARE="curl wget git sudo "
-DOCKER_VERSION="5:18.09.6~3-0~ubuntu-bionic"
-KUBE_VERSION="1.15.0-00"
+DOCKER_VERSION="18.09.9"
+KUBE_VERSION="v1.15.0"
 
 OS_RELEASE="/etc/os-release"
 
@@ -193,35 +193,21 @@ install_docker()
   echo ""
   echo "Installing Docker..." 
 
-  if [[ "$HOST_OS" == "centos" ]]; then
-    mkdir -p /var/lib/docker
-    yum install -y yum-utils \
-      device-mapper-persistent-data \
-      lvm2
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    disable_selinux
-    # See dependency issue: https://github.com/moby/moby/issues/33930
-    yum install -y --setopt=obsoletes=0 \
-      docker-ce${DOCKER_VERSION} \
-      docker-ce-selinux${DOCKER_VERSION}
-    systemctl enable docker && systemctl start docker
-    systemctl status docker
+  mkdir -p /usr/local/bin/
+  curl -L "https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz" -o docker.tgz
+  tar zxvf docker.tgz
+  sudo cp docker/* /usr/local/bin 
+  sudo cp docker/* /usr/bin 
+  rm docker.tgz
+  rm -rf docker
 
-  elif [[ "$HOST_OS" == "ubuntu" ]]; then
-    echo ""
-    # TODO: To be implemented
-    sudo apt update
-    sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    sudo apt update
-    sudo apt install docker-ce=${DOCKER_VERSION} -y
-    systemctl enable docker && systemctl start docker
-    systemctl status docker
-  else
-    echo "Unknown OS. Cannot continue."
-    exit 1
-  fi
+  curl -L "https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.service" -o /etc/systemd/system/docker.service
+  curl -L "https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.socket" -o /etc/systemd/system/docker.socket
+
+  systemctl unmask docker.service
+  systemctl unmask docker.socket
+  systemctl start docker.service
+  systemctl status docker --no-pager 
 }
 
 #Check Kubernetes version
@@ -229,18 +215,15 @@ check_kube_version()
 {
   ver=$'Version'
   if [ -x "$(command -v kubectl)" ]; then
-  check=$(sudo kubectl version | grep -o 'Version')
-  if [ "$check" == "$ver" ]; then
-    check1="$(sudo kubectl version | grep -o "$KUBE_VERSION")"
-    if [ "$check1" == "$KUBE_VERSION" ]; then
-      echo "The required version is already installed."
+    check="$(sudo kubectl version | grep -o "$KUBE_VERSION")"
+    if [ "$check" == "$KUBE_VERSION" ]; then
+      echo "The required version of kubectl already installed."
     else
       read -p "You have a different version of kubectl installed which might not be able to run ScienceBox. Are you willing to change your version to $KUBE_VERSION ?(Y/N)" res
       if [[ "$res" == "NO" || "$res" == "No"|| "$res" == "no" || "$res" == "N" || "$res" == "n" ]]; then
         exit 1
       fi
     fi
-  fi
   fi
 }
 
@@ -256,41 +239,10 @@ install_minikube()
 # Install Kubernetes
 install_kubernetes ()
 {
-  echo ""
-  echo "Installing kubernetes..."
-
-  if [[ "$HOST_OS" == "centos" ]]; then
-    cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
-enabled=1
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
-	https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-EOF
-
-    disable_selinux
-    yum install -y \
-      kubelet${KUBE_VERSION} \
-      kubeadm${KUBE_VERSION} \
-      kubectl${KUBE_VERSION}
-    systemctl enable kubelet && systemctl start kubelet
-    systemctl status kubelet
-
-  elif [[ "$HOST_OS" ==  "ubuntu" ]]; then
-    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-    sudo apt-get update -q
-    sudo apt-get install -qy kubectl=${KUBE_VERSION}
-    #systemctl enable kubelet && systemctl start kubelet
-    #systemctl status kubelet
+    mkdir -p /usr/local/bin/  
+    curl -L "https://storage.googleapis.com/kubernetes-release/release/$KUBE_VERSION/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl
+    chmod +x /usr/local/bin/kubectl
     kubectl version
-  else
-    echo "Unknown OS. Cannot continue."
-    exit 1
-  fi
 }
 
 
