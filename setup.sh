@@ -28,7 +28,7 @@ pull_images
 # Starting minikube
 echo ""
 echo "Pulling images..."
-sudo minikube start --driver=none --kubernetes-version=1.15.0
+sudo minikube start --driver=$DRIVER --kubernetes-version=1.15.0
 
 # Assigning label to minikube node
 echo ""

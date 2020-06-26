@@ -9,7 +9,7 @@ SUPPORTED_NODE_TYPES=(master worker)
 BASIC_SOFTWARE="curl wget git sudo "
 DOCKER_VERSION="18.09.9"
 KUBE_VERSION="v1.15.0"
-
+DRIVER="none"
 OS_RELEASE="/etc/os-release"
 
 # Versions
@@ -358,6 +358,9 @@ create_volumes()
   sudo mkdir -p /mnt/fst3_userdata
   sudo mkdir -p /mnt/jupyterhub_data
   sudo chmod -rwx '/mnt'
+  if [[ "$DRIVER" != "none" ]]; then
+    sudo minikube mount /mnt:/mnt
+  fi
 }
 
 #Deployment of ScienceBox
