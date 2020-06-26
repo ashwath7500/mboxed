@@ -149,8 +149,49 @@ configure_iptables ()
 }
 
 
+#Changing node labels
+change_labels()
+{
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/CERNBOX.yaml
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/eos-storage-fst.template.yaml
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/eos-storage-mgm.yaml
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/LDAP.yaml
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/SWAN.yaml
+  sed -i 's/swan-users/minikube/g' ./kuboxed/SWAN.yaml
+}
 
+#Changing host names
+change_hostname()
+{
+  NODE_NAME=$(hostname)
+  sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
+  sed -i 's@up2kube-swan.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
+  sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/SWAN.yaml
+  sed -i 's@up2kube-swan.cern.ch@'"$NODE_NAME"'@' ./kuboxed/SWAN.yaml
+}
 
+#Changing ports
+change_ports()
+{
+  Line_num=$(grep "SWAN_BACKEND_PORT"  ./kuboxed/CERNBOX.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
+  Line_num=`expr $Line_num + 1`
+  sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10443"\2/' ./kuboxed/CERNBOX.yaml
+  sed -i 's/^\( *hostPort: &HTTP_PORT  *\)[^ ]*\(.*\)*$/\110080\2/' ./kuboxed/SWAN.yaml
+  sed -i 's/^\( *hostPort: &HTTPS_PORT  *\)[^ ]*\(.*\)*$/\110443\2/' ./kuboxed/SWAN.yaml
+  Line_num=$(grep "name: HTTP_PORT"  ./kuboxed/SWAN.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
+  Line_num=`expr $Line_num + 1`
+  sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10080"\2/' ./kuboxed/SWAN.yaml
+  Line_num=$(grep "name: HTTPS_PORT"  ./kuboxed/SWAN.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
+  Line_num=`expr $Line_num + 1`
+  sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10443"\2/' ./kuboxed/SWAN.yaml
+}
+
+#Additional required changes
+other_changes()
+{
+  sed -i 's:^cp.*$:cp ./kuboxed/eos-storage-fst.template.yaml $FNAME:g' ./kuboxed/eos-storage-fst.sh #Modifying file path of fst template yaml
+  sed -i 's/^\( *hostNetwork:  *\)[^ ]*\(.*\)*$/\1false\2/' ./kuboxed/SWAN.yaml #Changes to *not* run SWAN on hostnetwork
+}
 # Install the basic software
 install_basics()
 {
@@ -325,12 +366,14 @@ deploy_sciencebox()
   sudo kubectl apply -f ./kuboxed/BOXED.yaml
   sudo kubectl apply -f ./kuboxed/LDAP.yaml
   run=$'Running'
+  # Waiting for ldap to start
   LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | grep -o 'Running')
   while  [ "$LDAP_PODNAME" != "$run" ] 
   do
   LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | grep -o 'Running')
   done
   sudo kubectl apply -f ./kuboxed/eos-storage-mgm.yaml
+  # Waiting for EOS-MGM to start
   Eos_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep eos-mgm | grep -o 'Running')
   while [ "$Eos_PODNAME" != "$run" ]
   do
@@ -339,6 +382,7 @@ deploy_sciencebox()
   bash ./kuboxed/eos-storage-fst.sh 1 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
   bash ./kuboxed/eos-storage-fst.sh 2 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
   bash ./kuboxed/eos-storage-fst.sh 3 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
+  # Updating fst userdata paths
   sed -i 's/fst_userdata/fst1_userdata/g' eos-storage-fst1.yaml
   sed -i 's/fst_userdata/fst2_userdata/g' eos-storage-fst2.yaml
   sed -i 's/fst_userdata/fst3_userdata/g' eos-storage-fst3.yaml
@@ -348,27 +392,31 @@ deploy_sciencebox()
   sudo kubectl apply -f ./kuboxed/CERNBOX.yaml
   sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=boxed:default
   sudo kubectl apply -f ./kuboxed/SWAN.yaml
+  # Waiting for SWAN to start
   SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | grep -o 'Running')
   while  [ "$SWAN_PODNAME" != "$run" ] 
   do
   SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | grep -o 'Running')
   done
   SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | cut -d ' ' -f 1)
+  # Making changes to jupyterhub configurations
   sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i 's/"0.0.0.0"/"127.0.0.1"/g' /srv/jupyterhub/jupyterhub_config.py
   sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
 }
 
-#Adding users
+# Adding users
 add_users()
 {
   LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | cut -d ' ' -f 1)
   sudo kubectl exec -n boxed $LDAP_PODNAME -- bash /root/addusers.sh
 }
 
-#Pulling the dockcer images
+# Pulling the dockcer images
 pull_images()
 {
+  # Creating a list of images required for each of the yaml files
   imgs=$(grep 'image:' ./kuboxed/SWAN.yaml | sed  's/image://')
+  # Iterating and pulling the images
   for img in $imgs
   do
   docker pull $img

@@ -1,48 +1,54 @@
 # Import variables and functions
 source etc/functions.sh
-# Check to be root
+
+# Preliminary checks
+echo ""
+echo "Preliminary checks..."
 need_root
-#Pulling yamls
-git clone https://github.com/cernbox/kuboxed.git  #add these in installations.
+
+# Pulling yamls
+echo ""
+echo "Pulling kuboxed..."
+git clone https://github.com/cernbox/kuboxed.git
 chmod -R 777 ./kuboxed
-#Modifying yamls
-sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/CERNBOX.yaml
-sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/eos-storage-fst.template.yaml
-sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/eos-storage-mgm.yaml
-sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/LDAP.yaml
-sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/SWAN.yaml
-sed -i 's/swan-users/minikube/g' ./kuboxed/SWAN.yaml
-NODE_NAME=$(hostname) #need to change for other drivers
-sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
-sed -i 's@up2kube-swan.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
-sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/SWAN.yaml
-sed -i 's@up2kube-swan.cern.ch@'"$NODE_NAME"'@' ./kuboxed/SWAN.yaml
-Line_num=$(grep "SWAN_BACKEND_PORT"  ./kuboxed/CERNBOX.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
-Line_num=`expr $Line_num + 1`
-sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10443"\2/' ./kuboxed/CERNBOX.yaml
-sed -i 's/^\( *hostPort: &HTTP_PORT  *\)[^ ]*\(.*\)*$/\110080\2/' ./kuboxed/SWAN.yaml
-sed -i 's/^\( *hostPort: &HTTPS_PORT  *\)[^ ]*\(.*\)*$/\110443\2/' ./kuboxed/SWAN.yaml
-Line_num=$(grep "name: HTTP_PORT"  ./kuboxed/SWAN.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
-Line_num=`expr $Line_num + 1`
-sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10080"\2/' ./kuboxed/SWAN.yaml
-Line_num=$(grep "name: HTTPS_PORT"  ./kuboxed/SWAN.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
-Line_num=`expr $Line_num + 1`
-sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10443"\2/' ./kuboxed/SWAN.yaml
-sed -i 's:^cp.*$:cp ./kuboxed/eos-storage-fst.template.yaml $FNAME:g' ./kuboxed/eos-storage-fst.sh
-sed -i 's/^\( *hostNetwork:  *\)[^ ]*\(.*\)*$/\1false\2/' ./kuboxed/SWAN.yaml
-#Pulling images
+
+# Modifying yamls
+echo ""
+echo "Modyfing kuboxed..."
+change_labels
+change_hostname
+change_ports
+other_changes
+
+# Pulling images
+echo ""
+echo "Pulling images..."
 pull_images
-#Starting minikube
+
+# Starting minikube
+echo ""
+echo "Pulling images..."
 sudo minikube start --driver=none --kubernetes-version=1.15.0
-#Assigning label to minikube node
+
+# Assigning label to minikube node
+echo ""
+echo "Pulling images..."
 label_nodes
-#Creation of persistant volumes
+
+# Creation of persistant volumes
+echo ""
 echo "Creating persistant volumes..."
 create_volumes
-#Deployement of Services
+
+# Deployement of Services
+echo ""
 echo "Deploying Services..."
 deploy_sciencebox
-#adding users
+
+# adding users
+echo ""
 echo "Adding dummy users..."
 add_users
 
+echo ""
+echo "Setup Completed."
