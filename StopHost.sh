@@ -14,3 +14,5 @@ sudo kubectl delete all --all -n boxed
 sudo kubectl delete namespaces boxed
 NODE_NAME=$(sudo kubectl get nodes | grep master | cut -d ' ' -f 1)
 sudo kubectl label node $NODE_NAME nodeApp-
+#Removing yaml files
+sudo rm -R ./kuboxed
