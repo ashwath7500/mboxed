@@ -9,7 +9,8 @@ echo ""
 echo "Preliminary checks..."
 need_root
 
-# Removing Containers
-sudo kubectl delete --all pods -n=boxed
-sudo kubectl delete --all svc -n=boxed
-sudo kubectl delete --all deployments -n=boxed
+# Removing all resources
+sudo kubectl delete all --all -n boxed
+sudo kubectl delete namespaces boxed
+NODE_NAME=$(sudo kubectl get nodes | grep master | cut -d ' ' -f 1)
+sudo kubectl label node $NODE_NAME nodeApp-
