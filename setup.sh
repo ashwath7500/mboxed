@@ -29,8 +29,9 @@ Line_num=$(grep "name: HTTPS_PORT"  ./kuboxed/SWAN.yaml -n | sed 's/^\([0-9]\+\)
 Line_num=`expr $Line_num + 1`
 sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10443"\2/' ./kuboxed/SWAN.yaml
 sed -i 's:^cp.*$:cp ./kuboxed/eos-storage-fst.template.yaml $FNAME:g' ./kuboxed/eos-storage-fst.sh
+sed -i 's/^\( *hostNetwork:  *\)[^ ]*\(.*\)*$/\1false\2/' ./kuboxed/SWAN.yaml
 #Pulling images
-#TODO
+pull_images
 #Starting minikube
 sudo minikube start --driver=none --kubernetes-version=1.15.0
 #Assigning label to minikube node
@@ -44,3 +45,4 @@ deploy_sciencebox
 #adding users
 echo "Adding dummy users..."
 add_users
+

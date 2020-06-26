@@ -192,6 +192,8 @@ install_docker()
 {
   echo ""
   echo "Installing Docker..." 
+  systemctl stop docker
+  sudo killall docker-containerd
 
   mkdir -p /usr/local/bin/
   curl -L "https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz" -o docker.tgz
@@ -346,6 +348,14 @@ deploy_sciencebox()
   sudo kubectl apply -f ./kuboxed/CERNBOX.yaml
   sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=boxed:default
   sudo kubectl apply -f ./kuboxed/SWAN.yaml
+  SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | grep -o 'Running')
+  while  [ "$SWAN_PODNAME" != "$run" ] 
+  do
+  SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | grep -o 'Running')
+  done
+  SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | cut -d ' ' -f 1)
+  sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i 's/"0.0.0.0"/"127.0.0.1"/g' /srv/jupyterhub/jupyterhub_config.py
+  sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
 }
 
 #Adding users
@@ -358,14 +368,30 @@ add_users()
 #Pulling the dockcer images
 pull_images()
 {
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cernboxmysql:v1.0 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cernbox:v1.4 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cernboxgateway:v1.1 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/eos-storage:v0.9 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/eos-storage:v0.9 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/ldap:v0.2 -q
-docker pull gitlab-registry.cern.ch/swan/docker-images/jupyterhub:v1.9 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cvmfssquid:v0 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/eos-fuse:v0.8 -q
+  imgs=$(grep 'image:' ./kuboxed/SWAN.yaml | sed  's/image://')
+  for img in $imgs
+  do
+  docker pull $img
+  done
+  imgs=$(grep 'image:' ./kuboxed/LDAP.yaml | sed  's/image://')
+  for img in $imgs
+  do
+  docker pull $img
+  done
+  imgs=$(grep 'image:' ./kuboxed/eos-storage-mgm.yaml | sed  's/image://')
+  for img in $imgs
+  do
+  docker pull $img
+  done
+  imgs=$(grep 'image:' ./kuboxed/eos-storage-fst.template.yaml | sed  's/image://')
+  for img in $imgs
+  do
+  docker pull $img
+  done
+  imgs=$(grep 'image:' ./kuboxed/CERNBOX.yaml | sed  's/image://')
+  for img in $imgs
+  do
+  docker pull $img
+  done
 }
 
