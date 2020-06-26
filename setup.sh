@@ -27,12 +27,12 @@ pull_images
 
 # Starting minikube
 echo ""
-echo "Pulling images..."
+echo "Starting minikube..."
 sudo minikube start --driver=$DRIVER --kubernetes-version=1.15.0
 
 # Assigning label to minikube node
 echo ""
-echo "Pulling images..."
+echo "Assinging label to node..."
 label_nodes
 
 # Creation of persistant volumes
