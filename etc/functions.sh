@@ -235,10 +235,12 @@ install_docker()
   echo "Installing Docker..." 
   systemctl stop docker
   sudo killall docker-containerd
+  sudo groupadd docker
 
   mkdir -p /usr/local/bin/
   curl -L "https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz" -o docker.tgz
   tar zxvf docker.tgz
+  chmod -R 777 docker
   sudo cp docker/* /usr/local/bin 
   sudo cp docker/* /usr/bin 
   rm docker.tgz
@@ -274,8 +276,11 @@ check_kube_version()
 install_minikube()
 {
   mkdir -p /usr/local/bin/  
-  curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o /usr/local/bin/minikube
-  chmod +x /usr/local/bin/minikube
+  curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o minikube
+  chmod +x minikube
+  sudo cp minikube /usr/local/bin
+  sudo cp minikube /usr/bin
+  rm minikube
   minikube version
 }
 
@@ -283,8 +288,11 @@ install_minikube()
 install_kubernetes ()
 {
     mkdir -p /usr/local/bin/  
-    curl -L "https://storage.googleapis.com/kubernetes-release/release/$KUBE_VERSION/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl
-    chmod +x /usr/local/bin/kubectl
+    curl -L "https://storage.googleapis.com/kubernetes-release/release/$KUBE_VERSION/bin/linux/amd64/kubectl" -o kubectl
+    chmod +x kubectl
+    sudo cp kubectl /usr/local/bin
+    sudo cp kubectl /usr/bin
+    rm kubectl
     kubectl version
 }
 
