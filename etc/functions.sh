@@ -224,7 +224,8 @@ check_docker_version()
         exit 1
       fi
     fi
-  fi
+    systemctl stop docker
+  fi	
   fi      
 }
 
@@ -233,9 +234,9 @@ install_docker()
 {
   echo ""
   echo "Installing Docker..." 
-  systemctl stop docker
-  sudo killall docker-containerd
-  sudo groupadd docker
+  sudo killall docker
+  sudo killall containerd
+  sudo groupadd -f docker
 
   mkdir -p /usr/local/bin/
   curl -L "https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz" -o docker.tgz
