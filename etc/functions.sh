@@ -234,8 +234,8 @@ install_docker()
 {
   echo ""
   echo "Installing Docker..." 
-  sudo killall docker
-  sudo killall containerd
+  sudo killall -q docker
+  sudo killall -q containerd
   sudo groupadd -f docker
 
   mkdir -p /usr/local/bin/
