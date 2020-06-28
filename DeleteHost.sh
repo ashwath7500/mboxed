@@ -9,12 +9,8 @@ echo ""
 echo "Preliminary checks..."
 need_root 
 
-# Removing all resources
-sudo kubectl delete all --all -n boxed
-sudo kubectl delete namespaces boxed
-NODE_NAME=$(sudo kubectl get nodes | grep master | cut -d ' ' -f 1)
-sudo kubectl label node $NODE_NAME nodeApp-
-
+git clone https://github.com/cernbox/kuboxed.git
+chmod -R 777 ./kuboxed
 #Deleting all images
 imgs=$(grep 'image:' ./kuboxed/SWAN.yaml | sed  's/image://')
 docker rmi $imgs
