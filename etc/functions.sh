@@ -7,9 +7,11 @@ SUPPORTED_HOST_OS=(centos7)
 SUPPORTED_NODE_TYPES=(master worker)
 
 BASIC_SOFTWARE="curl wget git sudo "
+
 DOCKER_VERSION="18.09.9"
 KUBE_VERSION="v1.15.0"
 DRIVER="none"
+
 OS_RELEASE="/etc/os-release"
 
 # Versions
@@ -192,6 +194,7 @@ other_changes()
   sed -i 's:^cp.*$:cp ./kuboxed/eos-storage-fst.template.yaml $FNAME:g' ./kuboxed/eos-storage-fst.sh #Modifying file path of fst template yaml
   sed -i 's/^\( *hostNetwork:  *\)[^ ]*\(.*\)*$/\1false\2/' ./kuboxed/SWAN.yaml #Changes to *not* run SWAN on hostnetwork
 }
+
 # Install the basic software
 install_basics()
 {
@@ -224,8 +227,10 @@ check_docker_version()
         exit 1
       fi
     fi
+
     systemctl stop docker
   fi	
+
   fi      
 }
 
@@ -234,6 +239,7 @@ install_docker()
 {
   echo ""
   echo "Installing Docker..." 
+
   sudo killall -q docker
   sudo killall -q containerd
   sudo groupadd -f docker
@@ -254,6 +260,7 @@ install_docker()
   systemctl unmask docker.socket
   systemctl start docker.service
   systemctl status docker --no-pager 
+
 }
 
 #Check Kubernetes version
@@ -264,6 +271,7 @@ check_kube_version()
     check="$(sudo kubectl version | grep -o "$KUBE_VERSION")"
     if [ "$check" == "$KUBE_VERSION" ]; then
       echo "The required version of kubectl already installed."
+
     else
       read -p "You have a different version of kubectl installed which might not be able to run ScienceBox. Are you willing to change your version to $KUBE_VERSION ?(Y/N)" res
       if [[ "$res" == "NO" || "$res" == "No"|| "$res" == "no" || "$res" == "N" || "$res" == "n" ]]; then
@@ -367,6 +375,7 @@ create_volumes()
   sudo mkdir -p /mnt/fst3_userdata
   sudo mkdir -p /mnt/jupyterhub_data
   sudo chmod -rwx '/mnt'
+
   if [[ "$DRIVER" != "none" ]]; then
     sudo minikube mount /mnt:/mnt
   fi
