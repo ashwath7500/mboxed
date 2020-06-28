@@ -7,8 +7,10 @@ SUPPORTED_HOST_OS=(centos7)
 SUPPORTED_NODE_TYPES=(master worker)
 
 BASIC_SOFTWARE="curl wget git sudo "
-DOCKER_VERSION="5:18.09.6~3-0~ubuntu-bionic"
-KUBE_VERSION="1.15.0-00"
+
+DOCKER_VERSION="18.09.9"
+KUBE_VERSION="v1.15.0"
+DRIVER="none"
 
 OS_RELEASE="/etc/os-release"
 
@@ -149,7 +151,49 @@ configure_iptables ()
 }
 
 
+#Changing node labels
+change_labels()
+{
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/CERNBOX.yaml
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/eos-storage-fst.template.yaml
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/eos-storage-mgm.yaml
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/LDAP.yaml
+  sed -i 's/^\( *nodeApp:  *\)[^ ]*\(.*\)*$/\1minikube\2/' ./kuboxed/SWAN.yaml
+  sed -i 's/swan-users/minikube/g' ./kuboxed/SWAN.yaml
+}
 
+#Changing host names
+change_hostname()
+{
+  NODE_NAME=$(hostname)
+  sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
+  sed -i 's@up2kube-swan.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
+  sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/SWAN.yaml
+  sed -i 's@up2kube-swan.cern.ch@'"$NODE_NAME"'@' ./kuboxed/SWAN.yaml
+}
+
+#Changing ports
+change_ports()
+{
+  Line_num=$(grep "SWAN_BACKEND_PORT"  ./kuboxed/CERNBOX.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
+  Line_num=`expr $Line_num + 1`
+  sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10443"\2/' ./kuboxed/CERNBOX.yaml
+  sed -i 's/^\( *hostPort: &HTTP_PORT  *\)[^ ]*\(.*\)*$/\110080\2/' ./kuboxed/SWAN.yaml
+  sed -i 's/^\( *hostPort: &HTTPS_PORT  *\)[^ ]*\(.*\)*$/\110443\2/' ./kuboxed/SWAN.yaml
+  Line_num=$(grep "name: HTTP_PORT"  ./kuboxed/SWAN.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
+  Line_num=`expr $Line_num + 1`
+  sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10080"\2/' ./kuboxed/SWAN.yaml
+  Line_num=$(grep "name: HTTPS_PORT"  ./kuboxed/SWAN.yaml -n | sed 's/^\([0-9]\+\):.*$/\1/')
+  Line_num=`expr $Line_num + 1`
+  sed -i ''"$Line_num"'s/^\( *value:  *\)[^ ]*\(.*\)*$/\1"10443"\2/' ./kuboxed/SWAN.yaml
+}
+
+#Additional required changes
+other_changes()
+{
+  sed -i 's:^cp.*$:cp ./kuboxed/eos-storage-fst.template.yaml $FNAME:g' ./kuboxed/eos-storage-fst.sh #Modifying file path of fst template yaml
+  sed -i 's/^\( *hostNetwork:  *\)[^ ]*\(.*\)*$/\1false\2/' ./kuboxed/SWAN.yaml #Changes to *not* run SWAN on hostnetwork
+}
 
 # Install the basic software
 install_basics()
@@ -183,7 +227,10 @@ check_docker_version()
         exit 1
       fi
     fi
-  fi
+
+    systemctl stop docker
+  fi	
+
   fi      
 }
 
@@ -193,35 +240,27 @@ install_docker()
   echo ""
   echo "Installing Docker..." 
 
-  if [[ "$HOST_OS" == "centos" ]]; then
-    mkdir -p /var/lib/docker
-    yum install -y yum-utils \
-      device-mapper-persistent-data \
-      lvm2
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    disable_selinux
-    # See dependency issue: https://github.com/moby/moby/issues/33930
-    yum install -y --setopt=obsoletes=0 \
-      docker-ce${DOCKER_VERSION} \
-      docker-ce-selinux${DOCKER_VERSION}
-    systemctl enable docker && systemctl start docker
-    systemctl status docker
+  sudo killall -q docker
+  sudo killall -q containerd
+  sudo groupadd -f docker
 
-  elif [[ "$HOST_OS" == "ubuntu" ]]; then
-    echo ""
-    # TODO: To be implemented
-    sudo apt update
-    sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    sudo apt update
-    sudo apt install docker-ce=${DOCKER_VERSION} -y
-    systemctl enable docker && systemctl start docker
-    systemctl status docker
-  else
-    echo "Unknown OS. Cannot continue."
-    exit 1
-  fi
+  mkdir -p /usr/local/bin/
+  curl -L "https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz" -o docker.tgz
+  tar zxvf docker.tgz
+  chmod -R 777 docker
+  sudo cp docker/* /usr/local/bin 
+  sudo cp docker/* /usr/bin 
+  rm docker.tgz
+  rm -rf docker
+
+  curl -L "https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.service" -o /etc/systemd/system/docker.service
+  curl -L "https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.socket" -o /etc/systemd/system/docker.socket
+
+  systemctl unmask docker.service
+  systemctl unmask docker.socket
+  systemctl start docker.service
+  systemctl status docker --no-pager 
+
 }
 
 #Check Kubernetes version
@@ -229,11 +268,10 @@ check_kube_version()
 {
   ver=$'Version'
   if [ -x "$(command -v kubectl)" ]; then
-  check=$(sudo kubectl version | grep -o 'Version')
-  if [ "$check" == "$ver" ]; then
-    check1="$(sudo kubectl version | grep -o "$KUBE_VERSION")"
-    if [ "$check1" == "$KUBE_VERSION" ]; then
-      echo "The required version is already installed."
+    check="$(sudo kubectl version | grep -o "$KUBE_VERSION")"
+    if [ "$check" == "$KUBE_VERSION" ]; then
+      echo "The required version of kubectl already installed."
+
     else
       read -p "You have a different version of kubectl installed which might not be able to run ScienceBox. Are you willing to change your version to $KUBE_VERSION ?(Y/N)" res
       if [[ "$res" == "NO" || "$res" == "No"|| "$res" == "no" || "$res" == "N" || "$res" == "n" ]]; then
@@ -241,56 +279,30 @@ check_kube_version()
       fi
     fi
   fi
-  fi
 }
 
 #Install MiniKube
 install_minikube()
 {
   mkdir -p /usr/local/bin/  
-  curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o /usr/local/bin/minikube
-  chmod +x /usr/local/bin/minikube
+  curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o minikube
+  chmod +x minikube
+  sudo cp minikube /usr/local/bin
+  sudo cp minikube /usr/bin
+  rm minikube
   minikube version
 }
 
 # Install Kubernetes
 install_kubernetes ()
 {
-  echo ""
-  echo "Installing kubernetes..."
-
-  if [[ "$HOST_OS" == "centos" ]]; then
-    cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
-enabled=1
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
-	https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-EOF
-
-    disable_selinux
-    yum install -y \
-      kubelet${KUBE_VERSION} \
-      kubeadm${KUBE_VERSION} \
-      kubectl${KUBE_VERSION}
-    systemctl enable kubelet && systemctl start kubelet
-    systemctl status kubelet
-
-  elif [[ "$HOST_OS" ==  "ubuntu" ]]; then
-    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-    sudo apt-get update -q
-    sudo apt-get install -qy kubectl=${KUBE_VERSION}
-    #systemctl enable kubelet && systemctl start kubelet
-    #systemctl status kubelet
+    mkdir -p /usr/local/bin/  
+    curl -L "https://storage.googleapis.com/kubernetes-release/release/$KUBE_VERSION/bin/linux/amd64/kubectl" -o kubectl
+    chmod +x kubectl
+    sudo cp kubectl /usr/local/bin
+    sudo cp kubectl /usr/bin
+    rm kubectl
     kubectl version
-  else
-    echo "Unknown OS. Cannot continue."
-    exit 1
-  fi
 }
 
 
@@ -363,6 +375,10 @@ create_volumes()
   sudo mkdir -p /mnt/fst3_userdata
   sudo mkdir -p /mnt/jupyterhub_data
   sudo chmod -rwx '/mnt'
+
+  if [[ "$DRIVER" != "none" ]]; then
+    sudo minikube mount /mnt:/mnt
+  fi
 }
 
 #Deployment of ScienceBox
@@ -371,12 +387,14 @@ deploy_sciencebox()
   sudo kubectl apply -f ./kuboxed/BOXED.yaml
   sudo kubectl apply -f ./kuboxed/LDAP.yaml
   run=$'Running'
+  # Waiting for ldap to start
   LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | grep -o 'Running')
   while  [ "$LDAP_PODNAME" != "$run" ] 
   do
   LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | grep -o 'Running')
   done
   sudo kubectl apply -f ./kuboxed/eos-storage-mgm.yaml
+  # Waiting for EOS-MGM to start
   Eos_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep eos-mgm | grep -o 'Running')
   while [ "$Eos_PODNAME" != "$run" ]
   do
@@ -385,6 +403,7 @@ deploy_sciencebox()
   bash ./kuboxed/eos-storage-fst.sh 1 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
   bash ./kuboxed/eos-storage-fst.sh 2 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
   bash ./kuboxed/eos-storage-fst.sh 3 eos-mgm.boxed.svc.cluster.local eos-mgm.boxed.svc.cluster.local docker default
+  # Updating fst userdata paths
   sed -i 's/fst_userdata/fst1_userdata/g' eos-storage-fst1.yaml
   sed -i 's/fst_userdata/fst2_userdata/g' eos-storage-fst2.yaml
   sed -i 's/fst_userdata/fst3_userdata/g' eos-storage-fst3.yaml
@@ -394,26 +413,54 @@ deploy_sciencebox()
   sudo kubectl apply -f ./kuboxed/CERNBOX.yaml
   sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=boxed:default
   sudo kubectl apply -f ./kuboxed/SWAN.yaml
+  # Waiting for SWAN to start
+  SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | grep -o 'Running')
+  while  [ "$SWAN_PODNAME" != "$run" ] 
+  do
+  SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | grep -o 'Running')
+  done
+  SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | cut -d ' ' -f 1)
+  # Making changes to jupyterhub configurations
+  sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i 's/"0.0.0.0"/"127.0.0.1"/g' /srv/jupyterhub/jupyterhub_config.py
+  #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
 }
 
-#Adding users
+# Adding users
 add_users()
 {
   LDAP_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep ldap* | cut -d ' ' -f 1)
   sudo kubectl exec -n boxed $LDAP_PODNAME -- bash /root/addusers.sh
 }
 
-#Pulling the dockcer images
+# Pulling the dockcer images
 pull_images()
 {
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cernboxmysql:v1.0 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cernbox:v1.4 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cernboxgateway:v1.1 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/eos-storage:v0.9 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/eos-storage:v0.9 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/ldap:v0.2 -q
-docker pull gitlab-registry.cern.ch/swan/docker-images/jupyterhub:v1.9 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/cvmfssquid:v0 -q
-docker pull gitlab-registry.cern.ch/cernbox/boxedhub/eos-fuse:v0.8 -q
+  # Creating a list of images required for each of the yaml files
+  imgs=$(grep 'image:' ./kuboxed/SWAN.yaml | sed  's/image://')
+  # Iterating and pulling the images
+  for img in $imgs
+  do
+  docker pull $img
+  done
+  imgs=$(grep 'image:' ./kuboxed/LDAP.yaml | sed  's/image://')
+  for img in $imgs
+  do
+  docker pull $img
+  done
+  imgs=$(grep 'image:' ./kuboxed/eos-storage-mgm.yaml | sed  's/image://')
+  for img in $imgs
+  do
+  docker pull $img
+  done
+  imgs=$(grep 'image:' ./kuboxed/eos-storage-fst.template.yaml | sed  's/image://')
+  for img in $imgs
+  do
+  docker pull $img
+  done
+  imgs=$(grep 'image:' ./kuboxed/CERNBOX.yaml | sed  's/image://')
+  for img in $imgs
+  do
+  docker pull $img
+  done
 }
 
