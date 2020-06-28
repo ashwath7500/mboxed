@@ -413,7 +413,7 @@ deploy_sciencebox()
   SWAN_PODNAME=$(sudo kubectl -n boxed get pods -o wide | grep swan | grep -v  daemon | cut -d ' ' -f 1)
   # Making changes to jupyterhub configurations
   sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i 's/"0.0.0.0"/"127.0.0.1"/g' /srv/jupyterhub/jupyterhub_config.py
-  sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
+  #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
 }
 
 # Adding users
