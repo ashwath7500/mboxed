@@ -1,0 +1,174 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2020-06-27T21:56:37Z"
+  generateName: ldap-678d4477b8-
+  labels:
+    app: ldap
+    name: ldap
+    pod-template-hash: 678d4477b8
+  name: ldap-678d4477b8-mwkqf
+  namespace: boxed
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: ldap-678d4477b8
+    uid: d66d6239-7d56-46cd-ac52-f04fef17daac
+  resourceVersion: "8605"
+  selfLink: /api/v1/namespaces/boxed/pods/ldap-678d4477b8-mwkqf
+  uid: b4a7acee-6557-4b7a-a0b6-dde2e6ebeca1
+spec:
+  containers:
+  - env:
+    - name: PODINFO_NAMESPACE
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.namespace
+    - name: PODINFO_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: PODINFO_IP
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.podIP
+    - name: PODINFO_NODE_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: spec.nodeName
+    - name: PODINFO_NODE_IP
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.hostIP
+    - name: THIS_CONTAINER
+      value: LDAP
+    - name: DEPLOYMENT_TYPE
+      value: kubernetes
+    - name: LDAP_ENDPOINT
+      value: localhost
+    - name: LDAP_TLS_VERIFY_CLIENT
+      value: try
+    - name: HOSTNAME
+      value: openldap
+    - name: LDAP_ORGANISATION
+      value: Example Inc.
+    - name: LDAP_DOMAIN
+      value: example.org
+    - name: LDAP_BASE_DN
+      value: dc=example,dc=org
+    - name: LDAP_ADMIN_PASSWORD
+      value: admin
+    - name: LDAP_READONLY_USER
+      value: "true"
+    - name: LDAP_READONLY_USER_USERNAME
+      value: readuser
+    - name: LDAP_READONLY_USER_PASSWORD
+      value: readuser
+    - name: LDAP_URI
+      value: ldap://127.0.0.1
+    - name: LDAP_PORT
+      value: "389"
+    - name: LDAP_ADMIN_BIND_DN
+      value: cn=admin,dc=example,dc=org
+    - name: LDAP_ADMIN_BIND_PASSWORD
+      value: admin
+    image: gitlab-registry.cern.ch/cernbox/boxedhub/ldap:v0.2
+    imagePullPolicy: IfNotPresent
+    name: ldap
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/lib/ldap
+      name: ldap-userdb
+    - mountPath: /etc/ldap/slapd.d
+      name: ldap-config
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: default-token-bzkmn
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: minikube
+  nodeSelector:
+    nodeApp: minikube
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 60
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - hostPath:
+      path: /mnt/ldap/userdb
+      type: Directory
+    name: ldap-userdb
+  - hostPath:
+      path: /mnt/ldap/config
+      type: Directory
+    name: ldap-config
+  - name: default-token-bzkmn
+    secret:
+      defaultMode: 420
+      secretName: default-token-bzkmn
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2020-06-27T21:56:37Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2020-06-27T21:56:58Z"
+    message: 'containers with unready status: [ldap]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2020-06-27T21:56:58Z"
+    message: 'containers with unready status: [ldap]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2020-06-27T21:56:37Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://0ee7e1ad2da924ddb9f0f1b523845f331102922078a303daae2e9ddd6f99e884
+    image: gitlab-registry.cern.ch/cernbox/boxedhub/ldap:v0.2
+    imageID: docker-pullable://gitlab-registry.cern.ch/cernbox/boxedhub/ldap@sha256:1a59bfc3bf32eb29bcdb79520830e0ddf53e480311759cc24e579ab63b05a9c7
+    lastState:
+      terminated:
+        containerID: docker://0ee7e1ad2da924ddb9f0f1b523845f331102922078a303daae2e9ddd6f99e884
+        exitCode: 0
+        finishedAt: "2020-06-27T22:07:34Z"
+        reason: Completed
+        startedAt: "2020-06-27T22:07:33Z"
+    name: ldap
+    ready: false
+    restartCount: 7
+    state:
+      waiting:
+        message: Back-off 5m0s restarting failed container=ldap pod=ldap-678d4477b8-mwkqf_boxed(b4a7acee-6557-4b7a-a0b6-dde2e6ebeca1)
+        reason: CrashLoopBackOff
+  hostIP: 172.17.0.2
+  phase: Running
+  podIP: 172.18.0.4
+  qosClass: BestEffort
+  startTime: "2020-06-27T21:56:37Z"

@@ -9,7 +9,7 @@ SUPPORTED_NODE_TYPES=(master worker)
 BASIC_SOFTWARE="curl wget git sudo "
 DOCKER_VERSION="18.09.9"
 KUBE_VERSION="v1.15.0"
-DRIVER="none"
+DRIVER="docker"
 OS_RELEASE="/etc/os-release"
 
 # Versions
@@ -163,7 +163,7 @@ change_labels()
 #Changing host names
 change_hostname()
 {
-  NODE_NAME=$(hostname)
+  NODE_NAME=$(sudo kubectl get nodes | grep master | cut -d ' ' -f 1)
   sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
   sed -i 's@up2kube-swan.cern.ch@'"$NODE_NAME"'@' ./kuboxed/CERNBOX.yaml
   sed -i 's@up2kube-cernbox.cern.ch@'"$NODE_NAME"'@' ./kuboxed/SWAN.yaml
@@ -368,7 +368,7 @@ create_volumes()
   sudo mkdir -p /mnt/jupyterhub_data
   sudo chmod -rwx '/mnt'
   if [[ "$DRIVER" != "none" ]]; then
-    sudo minikube mount /mnt:/mnt
+    gnome-terminal -- sudo minikube mount /mnt:/mnt
   fi
 }
 

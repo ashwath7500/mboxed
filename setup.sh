@@ -12,6 +12,12 @@ echo "Pulling kuboxed..."
 git clone https://github.com/cernbox/kuboxed.git
 chmod -R 777 ./kuboxed
 
+
+# Starting minikube
+echo ""
+echo "Starting minikube..."
+sudo minikube start --driver=$DRIVER --kubernetes-version=1.15.0 --disk-size=50138MB --force
+
 # Modifying yamls
 echo ""
 echo "Modyfing kuboxed..."
@@ -23,12 +29,7 @@ other_changes
 # Pulling images
 echo ""
 echo "Pulling images..."
-pull_images
-
-# Starting minikube
-echo ""
-echo "Starting minikube..."
-sudo minikube start --driver=$DRIVER --kubernetes-version=1.15.0
+#pull_images
 
 # Assigning label to minikube node
 echo ""
