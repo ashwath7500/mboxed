@@ -28,3 +28,5 @@ imgs=$(grep 'image:' ./kuboxed/CERNBOX.yaml | sed  's/image://')
 docker rmi $imgs
 #Removing yaml files
 sudo rm -R ./kuboxed
+#Removing the mount path
+sudo rm -R /mnt
