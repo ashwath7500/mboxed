@@ -202,9 +202,9 @@ install_basics()
   echo "Installing the basics..."
 
   if [[ "$HOST_OS" == "centos" ]]; then
-    yum install -y $BASIC_SOFTWARE
+    yum install -y $BASIC_SOFTWARE -q
   elif [[ "$HOST_OS" == "ubuntu" ]]; then
-    apt-get install -y $BASIC_SOFTWARE
+    apt-get install -y $BASIC_SOFTWARE -q
   else
     echo "Unknown OS. Cannot continue."
     exit 1
@@ -245,7 +245,7 @@ install_docker()
   sudo groupadd -f docker
 
   mkdir -p /usr/local/bin/
-  curl -L "https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz" -o docker.tgz
+  curl -s -S -L "https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz" -o docker.tgz
   tar zxvf docker.tgz
   chmod -R 777 docker
   sudo cp docker/* /usr/local/bin 
@@ -253,8 +253,8 @@ install_docker()
   rm docker.tgz
   rm -rf docker
 
-  curl -L "https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.service" -o /etc/systemd/system/docker.service
-  curl -L "https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.socket" -o /etc/systemd/system/docker.socket
+  curl -s -S -L "https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.service" -o /etc/systemd/system/docker.service
+  curl -s S -L "https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.socket" -o /etc/systemd/system/docker.socket
 
   systemctl unmask docker.service
   systemctl unmask docker.socket
@@ -268,7 +268,7 @@ check_kube_version()
 {
   ver=$'Version'
   if [ -x "$(command -v kubectl)" ]; then
-    check="$(sudo kubectl version | grep -o "$KUBE_VERSION")"
+    check="$(sudo kubectl version --client | grep -o "$KUBE_VERSION")"
     if [ "$check" == "$KUBE_VERSION" ]; then
       echo "The required version of kubectl already installed."
 
@@ -285,7 +285,7 @@ check_kube_version()
 install_minikube()
 {
   mkdir -p /usr/local/bin/  
-  curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o minikube
+  curl -s -S -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o minikube
   chmod +x minikube
   sudo cp minikube /usr/local/bin
   sudo cp minikube /usr/bin
@@ -297,12 +297,12 @@ install_minikube()
 install_kubernetes ()
 {
     mkdir -p /usr/local/bin/  
-    curl -L "https://storage.googleapis.com/kubernetes-release/release/$KUBE_VERSION/bin/linux/amd64/kubectl" -o kubectl
+    curl -s -S -L "https://storage.googleapis.com/kubernetes-release/release/$KUBE_VERSION/bin/linux/amd64/kubectl" -o kubectl
     chmod +x kubectl
     sudo cp kubectl /usr/local/bin
     sudo cp kubectl /usr/bin
     rm kubectl
-    kubectl version
+    kubectl version --client
 }
 
 

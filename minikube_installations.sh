@@ -24,7 +24,7 @@ install_basics
 echo ""
 echo "Installing dependencies..."
 if [[ "$HOST_OS" == "ubuntu" ]]; then
-apt-get install -y \
+apt-get install -y -q \
   conntrack
 fi
 

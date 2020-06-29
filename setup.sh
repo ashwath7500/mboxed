@@ -9,7 +9,7 @@ need_root
 # Pulling yamls
 echo ""
 echo "Pulling kuboxed..."
-git clone https://github.com/cernbox/kuboxed.git
+git clone https://github.com/cernbox/kuboxed.git -q
 chmod -R 777 ./kuboxed
 
 # Starting minikube
